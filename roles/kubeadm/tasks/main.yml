@@ -1,0 +1,36 @@
+- name: add k8s repository key
+  ansible.builtin.apt_key:
+    url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+    state: present
+  become: true
+
+- name: add k8s repository
+  ansible.builtin.apt_repository:
+    repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+    state: present
+    filename: kubernetes
+    update_cache: yes
+  become: true
+
+- name: add k8s packages
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - ebtables
+      - ethtool
+      - kubeadm={{ kubernetes_version }}*
+      - kubelet={{ kubernetes_version }}*
+      - kubectl={{ kubernetes_version }}*
+  become: true
+  notify: restart kubelet service
+
+- name: hold k8s packages
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubeadm
+    - kubelet
+    - kubectl
+  become: true

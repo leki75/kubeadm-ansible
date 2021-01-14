@@ -1,0 +1,27 @@
+- name: create kubeadm config directory
+  ansible.builtin.file:
+    path: /var/lib/kubeadm
+    state: directory
+    owner: root
+  become: true
+
+- name: generate kubelet config for kubeadm
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /var/lib/kubeadm/config.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  become: true
+
+- name: check if kubeadm init has run
+  ansible.builtin.stat:
+    path: /etc/kubernetes/manifests/kube-apiserver.yaml
+  become: true
+  register: kube_apiserver_stat
+
+- name: kubeadm init
+  ansible.builtin.command: >
+    kubeadm init --config /var/lib/kubeadm/config.yaml
+  become: true
+  when: not kube_apiserver_stat.stat.exists

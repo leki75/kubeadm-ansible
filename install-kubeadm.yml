@@ -1,0 +1,4 @@
+- name: install-kubeadm
+  hosts: all
+  roles:
+    - kubeadm

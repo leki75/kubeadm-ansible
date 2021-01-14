@@ -1,0 +1,66 @@
+- name: copy modules config
+  ansible.builtin.copy:
+    content: |
+      overlay
+      br_netfilter
+    dest: /etc/modules-load.d/containerd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: load kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+  become: true
+
+- name: setup sysctl params
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+    reload: yes
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.ipv4.ip_forward
+  become: true
+
+- name: install containerd package
+  ansible.builtin.apt:
+    name: containerd
+    state: present
+    update_cache: yes
+  become: true
+  notify: restart containerd service
+
+- name: create containerd config directory
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    owner: root
+  become: true
+
+- name: create containerd config
+  ansible.builtin.copy:
+    src: containerd.toml
+    dest: /etc/containerd/containerd.toml
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: restart containerd service
+
+- name: create crictl config
+  ansible.builtin.copy:
+    src: crictl.yaml
+    dest: /etc/crictl.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  become: true

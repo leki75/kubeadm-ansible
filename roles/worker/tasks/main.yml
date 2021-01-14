@@ -1,0 +1,14 @@
+- name: kubeadm token query
+  ansible.builtin.command: >
+    kubeadm token create --print-join-command
+  delegate_to: "{{ groups['master'][0] }}"
+  become: true
+  register: kubeadm_join_command
+
+- name: debug
+  debug:
+    var: kubeadm_join_command
+
+- name: kubeadm join
+  ansible.builtin.command: "{{ kubeadm_join_command.stdout }}"
+  become: true

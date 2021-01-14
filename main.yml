@@ -1,0 +1,5 @@
+- import_playbook: install-containerd.yml
+- import_playbook: install-kubeadm.yml
+
+- import_playbook: kube-master.yml
+- import_playbook: kube-worker.yml
