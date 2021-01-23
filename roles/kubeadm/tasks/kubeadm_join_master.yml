@@ -1,0 +1,62 @@
+- name: create temp directory
+  local_action:
+    module: ansible.builtin.file
+    path: temp/etc/kubernetes/pki/etcd
+    state: directory
+  run_once: true
+
+- name: create certificate directories
+  ansible.builtin.file:
+    dest: /etc/kubernetes/pki/etcd
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+  when: inventory_hostname != groups['master'][0]
+
+- name: download certificates
+  ansible.builtin.fetch:
+    src: "{{ item }}"
+    dest: "temp{{ item }}"
+    flat: true
+  become: true
+  delegate_to: "{{ groups['master'][0] }}"
+  loop: "{{ kubeadm_join_certs }}"
+  run_once: true
+
+- name: upload certificates
+  ansible.builtin.copy:
+    src: "temp{{ item }}"
+    dest: "{{ item }}"
+    owner: root
+    group: root
+    mode: "{% if item | regex_search('key$') %}0600{% else %}0644{% endif %}"
+  become: true
+  loop: "{{ kubeadm_join_certs }}"
+  when: inventory_hostname != groups['master'][0]
+
+- name: delete temporary certificate directory
+  local_action:
+    module: ansible.builtin.file
+    path: temp/etc/kubernetes/pki
+    state: absent
+  run_once: true
+
+- name: kubeadm join master
+  ansible.builtin.command: >
+    kubeadm join {{ control_plane_endpoint }}
+      --control-plane
+      --apiserver-advertise-address {{ internal_address }}
+      --discovery-token-ca-cert-hash sha256:{{ kubeadm_discovery_token }}
+      --ignore-preflight-errors DirAvailable--etc-kubernetes-manifests
+      --token {{ kubeadm_token }}
+  become: true
+  register: kubeadm_join_result
+  throttle: 1
+  when: inventory_hostname != groups['master'][0]
+
+- name: print kubeadm join result
+  ansible.builtin.debug:
+    var: kubeadm_join_result.stdout_lines
+  when: inventory_hostname != groups['master'][0]

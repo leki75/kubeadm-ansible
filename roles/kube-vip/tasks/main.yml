@@ -1,0 +1,41 @@
+# Documentation:
+#   https://github.com/kubernetes/kubeadm/blob/master/docs/ha-considerations.md
+#   https://kube-vip.io/
+
+- name: download kube-vip image
+  ansible.builtin.command: >
+    ctr -n k8s.io image pull docker.io/plndr/kube-vip:{{ kube_vip_version }}
+  become: true
+
+- name: generate kube-vip manifests
+  ansible.builtin.command: >
+    ctr -n k8s.io run
+      --rm
+      --net-host
+      docker.io/plndr/kube-vip:{{ kube_vip_version }} vip /kube-vip manifest pod
+        --interface {{ internal_interface | default(ansible_facts.ansible_default_ipv4.interface) }}
+        --address {{ control_plane_endpoint | regex_replace(':.*') }}
+        --controlplane
+        --arp
+        --leaderElection
+  become: true
+  changed_when: false
+  register: kube_vip_manifest
+
+- name: create static pod directory
+  ansible.builtin.file:
+    path: /etc/kubernetes/manifests/
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: create kube-vip manifest
+  ansible.builtin.copy:
+    dest: /etc/kubernetes/manifests/kube-vip.yaml
+    content: "{{ kube_vip_manifest.stdout }}"
+    owner: root
+    group: root
+    mode: "0600"
+  become: true

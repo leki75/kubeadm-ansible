@@ -1,0 +1,20 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: "{{ internal_address }}"
+nodeRegistration:
+  criSocket: /run/containerd/containerd.sock
+  kubeletExtraArgs:
+    cgroup-driver: systemd
+{% if (groups['master'] | length) > 1 %}
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+controlPlaneEndpoint: "{{ control_plane_endpoint }}"
+apiServer:
+  certSANs:
+  - "{{ control_plane_endpoint | regex_replace(':.*') }}"
+{% for controller in groups['master'] %}
+  - "{{ hostvars[controller]['ansible_' + (internal_interface | default(ansible_facts.ansible_default_ipv4.interface))].ipv4.address }}"
+{% endfor %}
+{% endif %}

@@ -1,0 +1,15 @@
+- name: containerd
+  hosts: all
+  roles:
+    - containerd
+
+  post_tasks:
+    - name: verify containerd
+      ansible.builtin.command: >
+        ctr version
+      become: true
+      changed_when: false
+      failed_when: ctr_version.rc != 0 or 'Server:' not in ctr_version.stdout_lines
+      register: ctr_version
+      tags:
+        - verify

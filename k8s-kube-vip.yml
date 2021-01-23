@@ -1,0 +1,5 @@
+- name: kube-vip
+  hosts: master
+  roles:
+    - role: kube-vip
+      when: groups['master'] | length > 1

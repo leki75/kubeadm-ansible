@@ -1,36 +1,13 @@
-- name: add k8s repository key
-  ansible.builtin.apt_key:
-    url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-    state: present
-  become: true
+- import_tasks: kubeadm_install.yml
 
-- name: add k8s repository
-  ansible.builtin.apt_repository:
-    repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
-    state: present
-    filename: kubernetes
-    update_cache: yes
+- name: download controller images
+  ansible.builtin.command: >
+    kubeadm config images pull
   become: true
+  changed_when: false
+  when: inventory_hostname in groups['master']
 
-- name: add k8s packages
-  ansible.builtin.apt:
-    name: "{{ packages }}"
-  vars:
-    packages:
-      - ebtables
-      - ethtool
-      - kubeadm={{ kubernetes_version }}*
-      - kubelet={{ kubernetes_version }}*
-      - kubectl={{ kubernetes_version }}*
-  become: true
-  notify: restart kubelet service
+- include_tasks: kubeadm_init.yml
+  when: inventory_hostname in groups['master'][0]
 
-- name: hold k8s packages
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  loop:
-    - kubeadm
-    - kubelet
-    - kubectl
-  become: true
+- import_tasks: kubeadm_join.yml

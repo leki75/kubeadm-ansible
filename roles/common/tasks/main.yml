@@ -1,0 +1,9 @@
+# TODO: run setup module to gather facts about network interface IPs
+
+- name: populate /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "{{ item }}"
+    line: "{{ hostvars[item]['ansible_' + (internal_interface | default(ansible_facts.ansible_default_ipv4.interface))].ipv4.address }} {{ item }}"
+  loop: "{{ groups['all'] }}"
+  become: true

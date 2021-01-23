@@ -1,0 +1,4 @@
+- name: calico
+  hosts: master[0]
+  roles:
+    - calico

@@ -1,0 +1,22 @@
+# NOTE: this is required for the next template task
+# since it iterates over controller network facts
+- name: gather facts about primary controller node
+  ansible.builtin.setup:
+    gather_subset: network
+  delegate_facts: true
+  delegate_to: "{{ groups['master'][0] }}"
+
+- name: kubeadm join worker
+  ansible.builtin.command: >
+    kubeadm join {{ kube_apiserver_address }}
+      --token {{ kubeadm_token }}
+      --discovery-token-ca-cert-hash sha256:{{ kubeadm_discovery_token }}
+  become: true
+  register: kubeadm_join_result
+  vars:
+    controller: "{{ groups['master'][0] }}"
+    kube_apiserver_address: "{% if groups['master'] | length >= 1 %}{{ control_plane_endpoint }}{% else %}{{ hostvars[controller].internal_address }}{% endif %}"
+
+- name: print kubeadm join result
+  ansible.builtin.debug:
+    var: kubeadm_join_result.stdout_lines

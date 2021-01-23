@@ -1,4 +1,0 @@
-# See: https://kube-vip.io/
-- name: generate kube-vip manifests
-  ansible.builtin.template:
-    path:

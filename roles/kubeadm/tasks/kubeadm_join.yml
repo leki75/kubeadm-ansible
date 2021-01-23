@@ -1,0 +1,22 @@
+- import_tasks: kubeadm_join_tokens.yml
+  run_once: true
+
+- ansible.builtin.command: >
+    kubectl get nodes -o name
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true
+  changed_when: false
+  delegate_to: "{{ groups['master'][0] }}"
+  register: kubectl_get_nodes
+
+- include_tasks: kubeadm_join_master.yml
+  when:
+    - inventory_hostname in groups['master']
+    - ("node/" + inventory_hostname not in kubectl_get_nodes.stdout_lines)
+
+- include_tasks: kubeadm_join_worker.yml
+  when:
+    - inventory_hostname in groups['worker']
+    - inventory_hostname not in groups['master']
+    - ("node/" + inventory_hostname not in kubectl_get_nodes.stdout_lines)

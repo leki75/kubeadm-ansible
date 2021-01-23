@@ -1,0 +1,48 @@
+# Get kubeadm token
+- name: kubeadm token list
+  ansible.builtin.shell: >
+    kubeadm token list -o json |
+    jq -r 'select(.expires |
+            fromdate >= now+600) |
+            select(.groups[]? |
+            contains("system:bootstrappers:kubeadm:default-node-token")) |
+            .token' |
+    head -1
+  become: true
+  changed_when: false
+  delegate_to: "{{ groups['master'][0] }}"
+  register: kubeadm_token_list
+
+- name: set old kubeadm_token
+  ansible.builtin.set_fact:
+    kubeadm_token: "{{ kubeadm_token_list.stdout }}"
+  when: kubeadm_token_list.stdout != ""
+
+- name: kubeadm token create
+  ansible.builtin.command: >
+    kubeadm token create
+  become: true
+  delegate_to: "{{ groups['master'][0] }}"
+  register: kubeadm_token_create
+  when: kubeadm_token is not defined
+
+- name: set new kubeadm_token
+  ansible.builtin.set_fact:
+    token: "{{ kubeadm_token_create.stdout }}"
+  when: kubeadm_token is not defined
+
+# Get kubeadm discovery token
+- name: kubeadm discovery token list
+  ansible.builtin.shell: >
+    openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt |
+    openssl rsa -pubin -outform der 2>/dev/null |
+    openssl dgst -sha256 -hex |
+    awk '{print $2}'
+  become: true
+  changed_when: false
+  delegate_to: "{{ groups['master'][0] }}"
+  register: kubeadm_discovery_token_list
+
+- name: set kubeadm_discovery_token
+  ansible.builtin.set_fact:
+    kubeadm_discovery_token: "{{ kubeadm_discovery_token_list.stdout }}"

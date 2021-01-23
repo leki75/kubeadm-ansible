@@ -6,7 +6,7 @@
     dest: /etc/modules-load.d/containerd.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: true
 
 - name: load kernel modules
@@ -44,8 +44,11 @@
     path: /etc/containerd
     state: directory
     owner: root
+    group: root
+    mode: "0755"
   become: true
 
+# TODO: generate containerd config on-the-fly
 - name: create containerd config
   ansible.builtin.copy:
     src: containerd.toml
