@@ -1,3 +1,5 @@
+- import_tasks: kubeadm_config.yml
+
 - name: create temp directory
   local_action:
     module: ansible.builtin.file
@@ -46,11 +48,8 @@
 - name: kubeadm join master
   ansible.builtin.command: >
     kubeadm join {{ control_plane_endpoint }}
-      --control-plane
-      --apiserver-advertise-address {{ internal_address }}
-      --discovery-token-ca-cert-hash sha256:{{ kubeadm_discovery_token }}
+      --config /var/lib/kubeadm/config.yaml
       --ignore-preflight-errors DirAvailable--etc-kubernetes-manifests
-      --token {{ kubeadm_token }}
   become: true
   register: kubeadm_join_result
   throttle: 1

@@ -1,4 +1,5 @@
 - name: flannel
+  any_errors_fatal: true
   hosts: master[0]
   roles:
     - flannel

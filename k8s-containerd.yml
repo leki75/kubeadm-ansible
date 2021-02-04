@@ -1,4 +1,5 @@
 - name: containerd
+  any_errors_fatal: true
   hosts: all
   roles:
     - containerd

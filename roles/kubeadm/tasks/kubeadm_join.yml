@@ -20,3 +20,10 @@
     - inventory_hostname in groups['worker']
     - inventory_hostname not in groups['master']
     - ("node/" + inventory_hostname not in kubectl_get_nodes.stdout_lines)
+
+- ansible.builtin.lineinfile:
+    path: /var/lib/kubelet/config.yaml
+    line: "address: {{ internal_address }}"
+    insertbefore: BOF
+  become: true
+  notify: restart kubelet service

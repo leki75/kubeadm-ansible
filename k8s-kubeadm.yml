@@ -1,5 +1,6 @@
 - name: kubeadm
   hosts: all
+  any_errors_fatal: true
   roles:
     - kubeadm
 

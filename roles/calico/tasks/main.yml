@@ -7,6 +7,16 @@
     mode: "0600"
   become: true
 
+- name: patch calico manifest
+  ansible.builtin.blockinfile:
+    path: /tmp/calico.yaml
+    block: |2
+                  - name: IP_AUTODETECTION_METHOD
+                    value: can-reach={{ control_plane_endpoint | regex_replace(':.*') }}
+    insertbefore: "# Enable IPIP"
+    marker: "            # {mark} Ansbile managed block"
+  become: true
+
 - name: apply calico manifest
   ansible.builtin.command: >
     kubectl apply -f /tmp/calico.yaml

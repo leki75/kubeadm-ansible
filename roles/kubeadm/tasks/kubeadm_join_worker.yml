@@ -1,3 +1,5 @@
+- import_tasks: kubeadm_config.yml
+
 # NOTE: this is required for the next template task
 # since it iterates over controller network facts
 - name: gather facts about primary controller node
@@ -9,8 +11,7 @@
 - name: kubeadm join worker
   ansible.builtin.command: >
     kubeadm join {{ kube_apiserver_address }}
-      --token {{ kubeadm_token }}
-      --discovery-token-ca-cert-hash sha256:{{ kubeadm_discovery_token }}
+      --config /var/lib/kubeadm/config.yaml
   become: true
   register: kubeadm_join_result
   vars:

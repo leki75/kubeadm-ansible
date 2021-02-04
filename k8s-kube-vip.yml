@@ -1,5 +1,6 @@
 - name: kube-vip
   hosts: master
+  any_errors_fatal: true
   roles:
     - role: kube-vip
       when: groups['master'] | length > 1

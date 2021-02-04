@@ -3,6 +3,9 @@
 - import_playbook: k8s-kube-vip.yml
 - import_playbook: k8s-kubeadm.yml
 
-- import_playbook: k8s-cni-calico.yml
-#- import_playbook: k8s-cni-flannel.yml
-#- import_playbook: k8s-cni-weave.yml
+- import_playbook: cni-flannel.yml
+  when: cni == "flannel"
+- import_playbook: cni-calico.yml
+  when: cni == "calico"
+- import_playbook: cni-weave.yml
+  when: cni == "weave"
