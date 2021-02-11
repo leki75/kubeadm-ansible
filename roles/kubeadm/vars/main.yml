@@ -1,3 +1,5 @@
+internal_address: "{{ hostvars[inventory_hostname]['ansible_' + (internal_interface | default(ansible_facts.ansible_default_ipv4.interface))].ipv4.address }}"
+
 kubeadm_join_certs:
   - /etc/kubernetes/pki/ca.crt
   - /etc/kubernetes/pki/ca.key

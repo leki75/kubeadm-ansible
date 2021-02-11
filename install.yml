@@ -7,5 +7,5 @@
   when: cni == "flannel"
 - import_playbook: cni-calico.yml
   when: cni == "calico"
-- import_playbook: cni-weave.yml
-  when: cni == "weave"
+#- import_playbook: cni-weave.yml
+#  when: cni == "weave"

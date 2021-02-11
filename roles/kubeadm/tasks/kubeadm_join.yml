@@ -13,15 +13,16 @@
 - include_tasks: kubeadm_join_master.yml
   when:
     - inventory_hostname in groups['master']
-    - ("node/" + inventory_hostname not in kubectl_get_nodes.stdout_lines)
+    - ("node/" + ansible_hostname not in kubectl_get_nodes.stdout_lines)
 
 - include_tasks: kubeadm_join_worker.yml
   when:
     - inventory_hostname in groups['worker']
     - inventory_hostname not in groups['master']
-    - ("node/" + inventory_hostname not in kubectl_get_nodes.stdout_lines)
+    - ("node/" + ansible_hostname not in kubectl_get_nodes.stdout_lines)
 
-- ansible.builtin.lineinfile:
+- name: bind kubelet to internal address
+  ansible.builtin.lineinfile:
     path: /var/lib/kubelet/config.yaml
     line: "address: {{ internal_address }}"
     insertbefore: BOF

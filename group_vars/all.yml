@@ -1,2 +1,7 @@
 kubernetes_version: 1.20
-internal_address: "{{ hostvars[inventory_hostname]['ansible_' + (internal_interface | default(ansible_facts.ansible_default_ipv4.interface))].ipv4.address }}"
+
+cni: "calico"
+control_plane_endpoint: "10.200.0.5:6443"
+dns_domain: "cluster.local"
+pod_subnet: "10.200.16.0/20"
+service_subnet: "10.200.32.0/20"

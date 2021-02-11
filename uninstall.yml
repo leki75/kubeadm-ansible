@@ -1,0 +1,30 @@
+- name: kubeadm
+  hosts: all
+  any_errors_fatal: true
+
+  tasks:
+    - name: reset kubeadm
+      ansible.builtin.command: >
+        kubeadm reset --force
+      become: true
+
+    - name: flush iptables rules
+      ansible.builtin.shell: |
+        iptables -F
+        iptables -t nat -F
+        iptables -t mangle -F
+        iptables -X
+      become: true
+
+    - name: remove /etc/cni/net.d directory
+      ansible.builtin.file:
+        path: /etc/cni/net.d
+        state: absent
+      become: true
+
+    - name: delete kube-vip IP
+      ansible.builtin.command: >
+        ip route addr {{ control_plane_endpoint | regex_replace(':.*') }} dev {{ internal_interface }}
+      become: true
+      failed_when: false
+      when: inventory_hostname in groups['master']

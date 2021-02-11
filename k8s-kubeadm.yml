@@ -5,15 +5,24 @@
     - kubeadm
 
   post_tasks:
+    - name: wait for kubelet to start
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:10248/healthz"
+        return_content: yes
+      register: kubelet_healthz
+      until: kubelet_healthz.content == "ok"
+      retries: 15
+      delay: 10
+
     - name: verify kubeadm
-      command: >
+      ansible.builtin.command: >
         kubectl get nodes -o name
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
       become: true
       changed_when: false
       delegate_to: "{{ groups['master'][0] }}"
-      failed_when: kubectl_get_nodes.rc != 0 or "node/" + inventory_hostname not in kubectl_get_nodes.stdout_lines
+      failed_when: kubectl_get_nodes.rc != 0 or "node/" + ansible_hostname not in kubectl_get_nodes.stdout_lines
       register: kubectl_get_nodes
       tags:
         - verify

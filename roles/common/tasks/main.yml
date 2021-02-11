@@ -1,9 +1,54 @@
-# TODO: run setup module to gather facts about network interface IPs
+- name: disable swap
+  ansible.builtin.command: >
+    swapoff -a
+  become: true
+
+- name: query swap file
+  ansible.builtin.command: |
+    awk '/\sswap\s+sw\s/{print $1}' /etc/fstab
+  become: true
+  changed_when: false
+  register: swap_file
+
+- block:
+  - name: remove swap from fstab
+    ansible.builtin.lineinfile:
+      path: /etc/fstab
+      regexp: "^{{ item | quote }}\\s"
+      state: absent
+    loop: "{{ swap_file.stdout_lines }}"
+    when: item[0] == '/'
+
+  - name: delete swap file
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: absent
+    loop: "{{ swap_file.stdout_lines }}"
+    when: item[0] == '/'
+
+  become: true
+  when: swap_file.stdout_lines | length > 0
+
+- name: init gather network facts
+  ansible.builtin.setup:
+    gather_subset: network
+  delegate_facts: true
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['all'] }}"
 
 - name: populate /etc/hosts
   ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: "{{ item }}"
-    line: "{{ hostvars[item]['ansible_' + (internal_interface | default(ansible_facts.ansible_default_ipv4.interface))].ipv4.address }} {{ item }}"
+    line: "{{ hostvars[item]['ansible_' + (internal_interface | default(ansible_facts.ansible_default_ipv4.interface))].ipv4.address }} {{ hostvars[item].ansible_hostname }}"
   loop: "{{ groups['all'] }}"
+  become: true
+
+- name: install common packages
+  ansible.builtin.apt:
+    name:
+      - ebtables
+      - ethtool
+      - jq
+    update_cache: yes
   become: true

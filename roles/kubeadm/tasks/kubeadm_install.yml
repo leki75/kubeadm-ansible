@@ -14,13 +14,7 @@
 
 - name: install k8s packages
   ansible.builtin.apt:
-    name: "{{ packages }}"
-  vars:
-    packages:
-      # TODO: move common packages to a different place
-      - ebtables
-      - ethtool
-      - jq
+    name:
       - kubeadm={{ kubernetes_version }}*
       - kubelet={{ kubernetes_version }}*
       - kubectl={{ kubernetes_version }}*

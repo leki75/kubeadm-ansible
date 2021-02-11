@@ -3,26 +3,26 @@
 
 servers=[
   {
-    :hostname => "controller-0",
-    :ip => "10.240.0.10",
+    :hostname => "controller-0.eqnx",
+    :ip => "10.200.0.10",
     :mem => "2048",
     :cpu => "4"
   },
   {
-    :hostname => "controller-1",
-    :ip => "10.240.0.11",
+    :hostname => "controller-1.eqnx",
+    :ip => "10.200.0.11",
     :mem => "2048",
     :cpu => "4"
   },
   {
-    :hostname => "controller-2",
-    :ip => "10.240.0.12",
+    :hostname => "controller-2.eqnx",
+    :ip => "10.200.0.12",
     :mem => "2048",
     :cpu => "4"
   },
   {
-    :hostname => "worker-0",
-    :ip => "10.240.0.20",
+    :hostname => "worker-0.eqnx",
+    :ip => "10.200.0.20",
     :mem => "768",
     :cpu => "2"
   },
