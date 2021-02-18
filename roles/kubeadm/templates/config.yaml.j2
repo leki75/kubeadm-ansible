@@ -19,6 +19,8 @@ apiServer:
 {% for controller in groups['master'] %}
   - "{{ hostvars[controller]['ansible_' + (internal_interface | default(ansible_facts.ansible_default_ipv4.interface))].ipv4.address }}"
 {% endfor %}
+  extraArgs:
+    feature-gates: RemoveSelfLink=false
 {% endif %}
 networking:
   dnsDomain: "{{ dns_domain }}"
