@@ -15,6 +15,8 @@ kind: ClusterConfiguration
 controlPlaneEndpoint: "{{ control_plane_endpoint }}"
 apiServer:
   certSANs:
+  - 127.0.0.1
+  - localhost
   - "{{ control_plane_endpoint | regex_replace(':.*') }}"
 {% for controller in groups['master'] %}
   - "{{ hostvars[controller]['ansible_' + (internal_interface | default(ansible_facts.ansible_default_ipv4.interface))].ipv4.address }}"
