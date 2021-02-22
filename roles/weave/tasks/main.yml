@@ -1,0 +1,16 @@
+- name: get kubectl version
+  ansible.builtin.command: >
+    kubectl version
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true
+  changed_when: false
+  register: kubectl_version
+  run_once: true
+
+- name: apply weave manifest
+  ansible.builtin.command: >
+    kubectl apply -f https://cloud.weave.works/k8s/net?env.IPALLOC_RANGE={{ pod_subnet }}&k8s-version={{ kubectl_version.stdout | b64encode }}
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true

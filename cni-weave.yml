@@ -1,0 +1,5 @@
+- name: weave
+  any_errors_fatal: true
+  hosts: master[0]
+  roles:
+    - weave
