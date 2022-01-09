@@ -1,0 +1,36 @@
+# Documentation:
+#   https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/
+
+- name: renew-certs
+  hosts: master
+  any_errors_fatal: true
+  tasks:
+    - name: renew all certificates
+      ansible.builtin.command: >
+        kubeadm certs renew all
+      become: true
+
+- name: renew-certs
+  hosts: master
+  any_errors_fatal: true
+  serial: 1
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  vars:
+    services:
+      - etcd-controller
+      - kube-scheduler-controller
+      - kube-controller-manager-controller
+      - kube-scheduler-controller
+  tasks:
+    - block:
+        - name: restart core services
+          ansible.builtin.command: >
+            kubectl delete pods -n kube-system {{ item }}-{{ groups['master'].index(inventory_hostname) }}
+          loop: "{{ services }}"
+
+        - name: wait for core services to be ready
+          ansible.builtin.command: >
+            kubectl wait --for=condition=Ready -n kube-system pod/{{ item }}-{{ groups['master'].index(inventory_hostname) }}
+          loop: "{{ services }}"
+      become: true
