@@ -1,4 +1,4 @@
-kubernetes_version: 1.20.14
+kubernetes_version: 1.21.8
 
 feature_gates: "RemoveSelfLink=false"
 
