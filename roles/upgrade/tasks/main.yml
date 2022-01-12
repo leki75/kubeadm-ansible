@@ -1,0 +1,9 @@
+- import_tasks: upgrade_kubeadm.yml
+
+- include_tasks: upgrade_first_controller.yml
+  when: inventory_hostname in groups['master'][0]
+
+- include_tasks: upgrade_node.yml
+  when: inventory_hostname not in groups['master'][0]
+
+- import_tasks: upgrade_kubelet.yml

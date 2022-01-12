@@ -1,0 +1,50 @@
+- import_playbook: k8s-kube-vip.yml
+
+- name: upgrade controller nodes
+  hosts: master
+  order: sorted
+  serial: 1
+  any_errors_fatal: true
+  roles:
+    - upgrade
+  post_tasks:
+    - name: verify controller node
+      ansible.builtin.command: >
+        kubectl get nodes -o name
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      become: true
+      changed_when: false
+      delegate_to: "{{ groups['master'][0] }}"
+      failed_when: kubectl_get_nodes.rc != 0 or "node/" + ansible_hostname not in kubectl_get_nodes.stdout_lines
+      register: kubectl_get_nodes
+      tags:
+        - verify
+
+- name: upgrade worker nodes
+  hosts: worker
+  order: sorted
+  serial: 1
+  any_errors_fatal: true
+  roles:
+    - upgrade
+  post_tasks:
+    - name: verify worker node
+      ansible.builtin.command: >
+        kubectl get nodes -o name
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      become: true
+      changed_when: false
+      delegate_to: "{{ groups['master'][0] }}"
+      failed_when: kubectl_get_nodes.rc != 0 or "node/" + ansible_hostname not in kubectl_get_nodes.stdout_lines
+      register: kubectl_get_nodes
+      tags:
+        - verify
+
+- import_playbook: cni-flannel.yml
+  when: cni == "flannel"
+- import_playbook: cni-calico.yml
+  when: cni == "calico"
+- import_playbook: cni-weave.yml
+  when: cni == "weave"

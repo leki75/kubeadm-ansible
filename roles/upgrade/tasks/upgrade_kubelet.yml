@@ -1,0 +1,38 @@
+- name: drain node
+  ansible.builtin.command: >
+    kubectl drain {{ ansible_hostname }} --ignore-daemonsets
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true
+  delegate_to: "{{ groups['master'][0] }}"
+
+- name: unhold kubelet package
+  ansible.builtin.dpkg_selections:
+    name: kubelet
+    selection: install
+  become: true
+
+- name: upgrade kubelet package
+  ansible.builtin.apt:
+    name:
+      - kubelet={{ kubernetes_version }}*
+  become: true
+  notify:
+    - systemd daemon reload
+    - restart kubelet service
+
+- name: hold kubelet package
+  ansible.builtin.dpkg_selections:
+    name: kubelet
+    selection: hold
+  become: true
+
+- ansible.builtin.meta: flush_handlers
+
+- name: uncordon node
+  ansible.builtin.command: >
+    kubectl uncordon {{ ansible_hostname }}
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true
+  delegate_to: "{{ groups['master'][0] }}"

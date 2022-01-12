@@ -1,0 +1,9 @@
+- name: kubeadm upgrade plan
+  ansible.builtin.command: >
+    kubeadm upgrade plan
+  become: true
+
+- name: kubeadm upgrade apply
+  ansible.builtin.command: >
+    kubeadm upgrade apply {{ kubernetes_version }} --yes
+  become: true

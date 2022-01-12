@@ -1,0 +1,4 @@
+- name: kubeadm upgrade node
+  ansible.builtin.command: >
+    kubeadm upgrade node
+  become: true
