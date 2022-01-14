@@ -19,6 +19,11 @@
 
 - name: apply calico manifest
   ansible.builtin.command: >
+    sed -i '/# Enable IPIP/,/#/s/Always/Never/' /tmp/calico.yaml
+  become: true
+
+- name: apply calico manifest
+  ansible.builtin.command: >
     kubectl apply -f /tmp/calico.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf

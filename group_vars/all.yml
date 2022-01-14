@@ -1,7 +1,5 @@
 kubernetes_version: 1.21.8
 
-feature_gates: "RemoveSelfLink=false"
-
 cni: "weave"
 control_plane_endpoint: "10.200.0.5:6443"
 dns_domain: "cluster.local"
