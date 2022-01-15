@@ -1,18 +1,25 @@
-- name: unhold kubeadm package
+- name: unhold k8s packages
   ansible.builtin.dpkg_selections:
-    name: kubeadm
+    name: "{{ item }}"
     selection: install
+  loop:
+    - kubeadm
+    - kubectl
   become: true
 
-- name: upgrade kubeadm package
+- name: upgrade k8s packages
   ansible.builtin.apt:
     name:
       - kubeadm={{ kubernetes_version }}*
+      - kubectl={{ kubernetes_version }}*
     update_cache: true
   become: true
 
-- name: hold kubeadm package
+- name: hold k8s packages
   ansible.builtin.dpkg_selections:
-    name: kubeadm
+    name: "{{ item }}"
     selection: hold
+  loop:
+    - kubeadm
+    - kubectl
   become: true
