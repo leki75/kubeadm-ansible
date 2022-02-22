@@ -1,0 +1,34 @@
+- name: download calico manifest
+  ansible.builtin.get_url:
+    url: https://docs.projectcalico.org/manifests/calico.yaml
+    dest: /tmp/calico.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  become: true
+  when: inventory_hostname in groups['master'][0]
+
+- name: patch calico manifest
+  ansible.builtin.blockinfile:
+    path: /tmp/calico.yaml
+    block: |2
+                  - name: IP_AUTODETECTION_METHOD
+                    value: can-reach={{ control_plane_endpoint | regex_replace(':.*') }}
+    insertbefore: "# Enable IPIP"
+    marker: "            # {mark} Ansbile managed block"
+  become: true
+  when: inventory_hostname in groups['master'][0]
+
+- name: apply calico manifest
+  ansible.builtin.command: >
+    sed -i '/# Enable IPIP/,/#/s/Always/Never/' /tmp/calico.yaml
+  become: true
+  when: inventory_hostname in groups['master'][0]
+
+- name: apply calico manifest
+  ansible.builtin.command: >
+    kubectl apply -f /tmp/calico.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true
+  when: inventory_hostname in groups['master'][0]

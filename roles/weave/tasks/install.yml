@@ -1,0 +1,7 @@
+- name: apply weave manifest
+  ansible.builtin.command: >
+    kubectl apply -f https://cloud.weave.works/k8s/net?env.IPALLOC_RANGE={{ pod_subnet }}&k8s-version={{ kubectl_version.stdout | b64encode }}
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true
+  when: inventory_hostname in groups['master'][0]

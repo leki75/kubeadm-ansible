@@ -1,5 +1,5 @@
 - name: calico
-  hosts: master[0]
+  hosts: all
   any_errors_fatal: true
   roles:
     - calico

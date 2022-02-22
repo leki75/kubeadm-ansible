@@ -1,0 +1,41 @@
+- import_playbook: cni-weave.yml
+  vars:
+    action: delete
+
+- name: flush iptables rules
+  any_errors_fatal: true
+  hosts: all
+  tasks:
+    - name: stop kubelet service
+      ansible.builtin.service:
+        name: kubelet
+        state: stopped
+      become: true
+
+    - name: stop CNI pods
+      shell:
+        crictl rm -f $(crictl ps -q --name {{ item }})
+      become: true
+      loop:
+        - weave
+        - weave-npc
+        - kube-proxy
+
+    - name: flush iptables
+      shell: |
+        iptables -F -t {{ item }}
+        iptables -X -t {{ item }}
+      become: true
+      loop:
+        - raw
+        - mangle
+        - filter
+        - nat
+
+    - name: start kubelet service
+      ansible.builtin.service:
+        name: kubelet
+        state: started
+      become: true
+
+- import_playbook: cni-calico.yml

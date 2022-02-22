@@ -1,0 +1,27 @@
+- name: apply calico manifest
+  ansible.builtin.command: >
+    kubectl delete -f https://docs.projectcalico.org/manifests/calico.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true
+  failed_when: false
+  when: inventory_hostname in groups['master'][0]
+
+- name: delete calico configs
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/cni/net.d/10-calico.conflist
+    - /etc/cni/net.d/calico-kubeconfig
+  become: true
+
+- name: delete calico binaries
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /opt/cni/bin/install
+    - /opt/cni/bin/calico
+    - /opt/cni/bin/calico-ipam
+  become: true

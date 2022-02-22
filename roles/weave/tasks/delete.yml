@@ -1,0 +1,31 @@
+- name: delete weave manifest
+  ansible.builtin.command: >
+    kubectl delete -f https://cloud.weave.works/k8s/net?k8s-version={{ kubectl_version.stdout | b64encode }}
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  become: true
+  failed_when: false
+  when: inventory_hostname in groups['master'][0]
+
+- name: delete weave config
+  ansible.builtin.file:
+    path: /etc/cni/net.d/10-weave.conflist
+    state: absent
+  become: true
+
+- name: find weave files
+  ansible.builtin.find:
+    paths: /opt/cni/bin
+    patterns: "weave*"
+    file_type: any
+  become: true
+  register: weave_files
+
+- name: delete weave binaries
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ weave_files['files'] }}"
+  loop_control:
+    label: "{{ item.path }}"
+  become: true
